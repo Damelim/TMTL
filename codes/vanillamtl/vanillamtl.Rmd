@@ -1,0 +1,243 @@
+---
+title: "MTL with CVX, BCD, ADMM"
+output: html_document
+date: "2025-04-10"
+---
+
+
+```{r, warning=F, message=F}
+
+library(CVXR)
+library(glmnet)
+library(Matrix)
+library(dplyr)
+
+
+
+set.seed(2025)
+
+find_zero_rows = function(mat){
+  which( apply(mat, 1, function(row) sqrt(sum(row^2))) < 1e-6)
+}
+find_zero_cols = function(mat){
+  which( apply(mat, 2, function(col) sqrt(sum(col^2))) < 1e-6)
+}
+rmse = function(x,y){
+  sqrt(mean((x-y)^2))
+}
+rng = function(x){
+  max(x)-min(x)
+}
+sum_l2_norm_rows <- function(W) {
+  sum(apply(W, 1, function(row) sqrt(sum(row^2))))
+}
+
+#### data generation ####
+p = 10 ; K = 6 ; n_target = 1000
+
+#SNR = 1/40
+sparsity_level_target = 0.8
+Wmean = 3
+
+W_true_target = matrix(0, p, K)
+active_features_target = 1:round((1-sparsity_level_target) * p)
+W_true_target[active_features_target, ] <- Wmean # matrix(rnorm(length(active_features_target) * K, mean = Wmean, sd = Wmean/5), length(active_features_target), K) 
+
+X_targett = matrix(rnorm(n_target * p, mean = 0, sd = 1), n_target, p) ; X_targett = scale(X_targett, center = T, scale = F) #; X_targett_center = attr(X_targett, "scaled:center")
+sigma = 0.001
+
+
+
+set.seed(1)
+lambda = 1e2
+
+## Generate (X,Y)_src, (X,Y)_tgt
+X_target = matrix(rnorm(n_target * p, mean = 0, sd = 1), n_target, p) ; X_target = scale(X_target, center = T, scale = F) #; X_target_center = attr(X_target, "scaled:center")
+X_target_test = matrix(rnorm(n_target * p, mean = 0, sd = 1), n_target, p) # iid copy of X_target to evaluate out of sample RMSE.
+Y_target = X_target %*% W_true_target + matrix(rnorm(n_target * K, mean = 0, sd = sigma), n_target, K) ; Y_target = scale(Y_target, center = T, scale = F) ; Y_target_center = attr(Y_target, "scaled:center")
+
+
+MTL_cvx = function(X, Y, lambda, verbose=F){
+  p = ncol(X)
+  K = ncol(Y)
+  W = Variable(p, K)
+  objective = Minimize(sum_squares(X %*% W - Y) + lambda * sum(p_norm(W, p = 2, axis = 1)))
+  problem = Problem(objective)
+  result = solve(problem, verbose = verbose)
+  W_opt = as.matrix(result$getValue(W))
+  
+  return(list(result = result, W = W_opt))
+}
+
+
+
+
+
+
+twoone_norm <- function(M){
+  p = nrow(M)
+  val = 0
+  for(k in 1:p){
+    val = val + sqrt(sum((M[k,]^2)))
+  }
+  return(val)
+}
+
+MTL_bcd <- function(X, Y, lambda, max_iter = 1e4, tol = 1e-7, B_init = matrix(0, nrow = ncol(X), ncol = ncol(Y)), verbose = F) {
+  
+  n = nrow(Y)
+  p = ncol(X)
+  K = ncol(Y)
+  
+  objectivevalue = rep(NA, max_iter)
+  # initialize
+  B = B_init
+  
+  X_colwise_l2normsq = apply(X, 2, function(x) sum(x^2))
+  
+  for(iter in 1:max_iter){ # outer loop
+    
+    B_old = B # current value.
+    
+    for(j in 1:p){ # inner loop
+      
+      # Pull out the jth feature vector of X
+      Xj = matrix(X[,j], n, 1)
+      
+      # compute partial residual
+      Rj = Y - X %*% B + Xj %*% matrix(B[j,], 1,K)
+      
+      # Compute A_j \in \mathbb{R}^{K}
+      Aj = t(Xj) %*% Rj
+      Aj_l2norm = sqrt(sum(Aj^2))
+      
+      # update equation
+      if(Aj_l2norm > lambda){
+        B[j,] = (1 - lambda/Aj_l2norm) * (Aj/X_colwise_l2normsq[j])
+      }else{
+        B[j,] = rep(0,K)
+      }
+      
+    } # end inner loop
+    
+    objectivevalue[iter] = sum((Y - X %*% B)^2) + lambda*twoone_norm(B)
+    if(iter > 2 & norm(B-B_old, "F") < tol){
+      cat('converged with iteration',iter,'\n')
+      break
+    }
+    
+  } # outer loop
+  
+  lst = list("B" = B,
+             "objective" = objectivevalue[!is.na(objectivevalue)])
+  return(lst)
+}
+
+
+
+
+
+
+MTL_admm = function(X, Y, lambda, 
+                    rho = 1, 
+                    max_iter = 1000, 
+                    tol = 1e-4,
+                    mu = 10,
+                    tau_inc = 2,
+                    tau_dec = 2,
+                    verbose = TRUE) {
+  
+  objectivevalue = rep(NA, max_iter)
+  n <- nrow(X)
+  p <- ncol(X)
+  K <- ncol(Y)
+  
+  B <- matrix(0, p, K)
+  Gamma <- matrix(0, p, K)
+  U <- matrix(0, p, K)  # scaled dual variable
+  
+  XtX <- crossprod(X, X)
+  XtY <- crossprod(X, Y)
+  Ip <- diag(p)
+  
+  for (iter in 1:max_iter) {
+    Gamma_old <- Gamma
+    
+    # B-update (ridge-like step)
+    B <- solve(2 * XtX + rho * Ip,  2 * XtY + rho * (Gamma - U))
+    
+    # Gamma-update (prox for \ell_2 norm: https://math.stackexchange.com/questions/2190885/proximal-operator-of-the-euclidean-norm-l-2-norm)
+    Z <- B + U
+    for (j in 1:p) {
+      z_j <- Z[j, ]
+      norm_z <- sqrt(sum(z_j^2))
+      if (norm_z > lambda / rho) {
+        Gamma[j, ] <- (1 - lambda / (rho * norm_z)) * z_j
+      } else {
+        Gamma[j, ] <- 0
+      }
+    }
+    
+    # Dual update
+    U <- U + B - Gamma
+    
+    # Residuals
+    primal_resid <- norm(B - Gamma, "F")
+    dual_resid <- rho * norm(Gamma - Gamma_old, "F")
+    
+    if (verbose && iter %% 1 == 0) {
+      cat(sprintf("Iter %d | Primal Resid: %.4f | Dual Resid: %.4f | Rho: %.3f\n",
+                  iter, primal_resid, dual_resid, rho))
+    }
+    
+    # Adaptive rho
+    if (primal_resid > mu * dual_resid) {
+      rho <- rho * tau_inc
+      U <- U / tau_inc # change of variable required for the scaled variable
+    } else if (dual_resid > mu * primal_resid) {
+      rho <- rho / tau_dec
+      U <- U * tau_dec # change of variable required for the scaled variable
+    }
+    
+    objectivevalue[iter] = norm(Y - X %*% B, "F") + lambda * twoone_norm(B)
+    
+    # Check convergence
+    if (iter > 2 & primal_resid < tol && dual_resid < tol) {
+      if (verbose) cat(sprintf("Converged at iter %d\n", iter))
+      break
+    }
+  }
+  
+  return(list(objective = objectivevalue[!is.na(objectivevalue)], B = B))
+}
+
+
+#### 1. CVXR ####
+res_cvx = MTL_cvx(X_target, Y_target, lambda, verbose = T)
+
+#### 2. BCD ####
+res_bcd = MTL_bcd(X_target, Y_target, lambda, max_iter = 10000, tol = 1e-6)
+
+#### 3. admm ####
+res_admm = MTL_admm(X_target, Y_target, lambda, rho = 1, max_iter = 10000, tol = 1e-4, mu = 10, tau_inc = 2, tau_dec = 2, verbose = T)
+
+
+
+res_cvx$result$value 
+res_bcd$objective[length(res_bcd$objective)] # res1$objective %>% ts.plot()
+res_admm$objective[length(res_admm$objective)] # res2$objective[!is.na(res2$objective)] %>% ts.plot()
+
+norm(res_cvx$W - W_true_target, "F")
+norm(res_bcd$B - W_true_target, "F")
+norm(res_admm$B - W_true_target, "F")
+
+
+
+res_cvx$W %>% round(digits = 7)
+res_bcd$B %>% round(digits = 7)
+res_admm$B %>% round(digits = 7)
+
+
+
+
+```
