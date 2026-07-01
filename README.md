@@ -2,7 +2,7 @@
 
 Transfer Multitask Learning for high-dimensional multi-output regression.
 
-## Quick start
+## Table of Contents
 - Generate example data
 - Fit TMTL(Fused)
 - Fit TMTL(Debiased)
@@ -46,6 +46,15 @@ W_true_source2 = W_true_target - 1*Delta_W
 
 ## TMTL(Fused)
 
+First, solve a jointly regularized least squares:
+\begin{align}
+\hat{\mathbf{B}}^0,\cdots,\hat{\mathbf{B}}^L &\in \argminA_{\mathbf{B}^0,\cdots,\mathbf{B}^L} \left[
+\frac{1}{2NK}\sum\limits_{\ell=0}^{L} \lVert \mathbf{Y}^{\ell} - \mathbf{X}^{\ell \cdot} \mathbf{B}^\ell \rVert_F^2 + \lambda_0
+\left( \lVert \mathbf{B}^{0} \rVert_{2,1} + \sum\limits_{\ell=1}^{L} a_\ell \lVert \mathbf{B}^\ell - \mathbf{B}^0 \rVert_{2,1} \right) \right], \label{cotrain}\\
+\hat{\mathbf{W}}^F &:= \frac{n_S}{N} \sum\limits_{\ell=1}^{L} \hat{\mathbf{B}}^\ell + \frac{n_T}{N} \hat{\mathbf{B}}^0, \label{fused}
+\end{align}
+where $\hat{\mathbf{W}}^F$ is the fused estimator. 
+
 The following is an example code to fit **TMTL(Fused)** with $\lambda_0 = \lambda_1 = \lambda_2 = 0.001$.
 
 First, set tuning parameters and generate data
@@ -76,7 +85,9 @@ X1tX1 = crossprod(X_source1,X_source1) ; X1tY1 = crossprod(X_source1,Y_source1)
 X2tX2 = crossprod(X_source2,X_source2) ; X2tY2 = crossprod(X_source2,Y_source2)
 ```
 
-Now run the algorithm
+Now run the algorithm with alternating direction method of multipliers (ADMM), with adaptive update rule. 
+Maximum iteration = 1000 with tolerance level for dual parameters and primal parameters were set as 1e-5.
+$\mathbf{W}^F = \frac{n_S}{N} \sum_{\ell=1}^{L} \hat{\mathbf{B}}^\ell + \frac{n_T}{N} \hat{\mathbf{B}}^0$.
 
 ```r
 admmm = admm_two_source(X0 = X_target, Y0 = Y_target, X1 = X_source1, Y1 = Y_source1, X2 = X_source2, Y2 = Y_source2, X0tX0, X0tY0, X1tX1, X1tY1, X2tX2, X2tY2,
@@ -87,6 +98,18 @@ admmm = admm_two_source(X0 = X_target, Y0 = Y_target, X1 = X_source1, Y1 = Y_sou
 
 W_opt_fused = n_source/N*(admmm$Gamma1 + admmm$Gamma2) + n_target/N*admmm$Gamma00
 ```
+
+
+## TMTL(Debiased)
+
+A debiasing step only involves target-data and corrects aligned shifts from target.
+\begin{align}
+\hat{\mathbf{D}} &\in \argminA_{\mathbf{D} \in \mathbb{R}^{p \times K}} \frac{1}{2n_T K} \lVert \mathbf{Y}^0 - \mathbf{X}^{0 \cdot} (\hat{\mathbf{W}}^{F} + \mathbf{D}) \rVert_F^2 + \tilde{\lambda} \lVert \mathbf{D} \rVert_{2,1}, \label{debiasedobjective} \\
+\hat{\mathbf{W}}^{D} &:= \hat{\mathbf{W}}^{F} + \hat{\mathbf{D}}. \label{debiasedestimator}
+\end{align}
+
+The following is the code to fit **TMTL(Debiased)** with $\tilde{\lambda} = 0.001$.
+
 
 
 
