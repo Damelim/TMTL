@@ -50,7 +50,6 @@ The following is an example code to fit \textbf{TMTL(Fused)} with $\lambda_0 = \
 
 
 ```r
-
 lambda0 = 0.001
 lambda1 = 0.001
 lambda2 = 0.001
@@ -67,6 +66,7 @@ X_source1 = matrix(rnorm(n_source * p, mean = 0, sd = sample(c(sd_target + sddif
   Y_source1 = X_source1 %*% W_true_source1 + matrix(rnorm(n_source * K, sd = sigma), n_source, K) # ; Y_source1 = scale(Y_source1, center = T, scale = F) ; Y_source1_center = attr(Y_source1, "scaled:center")
   X_source2 = matrix(rnorm(n_source * p, mean = 0, sd = sample(c(sd_target + sddiff, sd_target - sddiff), size = n_source * p, replace = T, prob = c(0.5, 0.5))), n_source, p) # ; X_source2 = scale(X_source2, center = T, scale = F) ; X_source2_center = attr(X_source2, "scaled:center")
   Y_source2 = X_source2 %*% W_true_source2 + matrix(rnorm(n_source * K, sd = sigma), n_source, K) # ; Y_source2 = scale(Y_source2, center = T, scale = F) ; Y_source2_center = attr(Y_source2, "scaled:center")
+```
 
 
 
