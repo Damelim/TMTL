@@ -54,7 +54,8 @@ $\hat{\mathbf{B}}^0,\cdots,\hat{\mathbf{B}}^L \in \arg\min_{\mathbf{B}^0,\cdots,
 
 Then compute the fused estimator:
 
-$\mathbf{W}^F = \frac{n_S}{N} \sum_{\ell=1}^{L} \hat{\mathbf{B}}^\ell + \frac{n_T}{N} \hat{\mathbf{B}}^0$
+$\mathbf{W}^F = \frac{n_S}{N} \sum_{\ell=1}^{L} \hat{\mathbf{B}}^\ell + \frac{n_T}{N} \hat{\mathbf{B}}^0$.
+
 The following is an example code to fit **TMTL(Fused)** with $\lambda_0 = \lambda_1 = \lambda_2 = 0.001$.
 
 First, set tuning parameters and generate data.
