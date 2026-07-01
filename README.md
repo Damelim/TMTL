@@ -47,25 +47,11 @@ W_true_source2 = W_true_target - 1*Delta_W
 ## TMTL(Fused)
 
 First, solve the jointly regularized least-squares problem
-
-\[
-\hat{\mathbf B}^{0},\ldots,\hat{\mathbf B}^{L} =
-\arg\min_{\mathbf B^{0},\ldots,\mathbf B^{L}}
-\left[
-\frac{1}{2NK}
-\sum_{\ell=0}^{L}
-\|\mathbf Y^\ell-\mathbf X^{\ell\cdot}\mathbf B^\ell\|_F^2
-+
-\lambda_0
-\left(
-\|\mathbf B^0\|_{2,1}
-+
-\sum_{\ell=1}^{L}
-a_\ell
-\|\mathbf B^\ell-\mathbf B^0\|_{2,1}
-\right)
-\right].
-\]
+$
+\hat{\mathbf{B}}^0,\cdots,\hat{\mathbf{B}}^L &\in \arg\min_{\mathbf{B}^0,\cdots,\mathbf{B}^L} \left[
+\frac{1}{2NK}\sum\limits_{\ell=0}^{L} \lVert \mathbf{Y}^{\ell} - \mathbf{X}^{\ell \cdot} \mathbf{B}^\ell \rVert_F^2 + \lambda_0
+\left( \lVert \mathbf{B}^{0} \rVert_{2,1} + \sum\limits_{\ell=1}^{L} a_\ell \lVert \mathbf{B}^\ell - \mathbf{B}^0 \rVert_{2,1} \right) \right]
+$
 
 Then compute the fused estimator:
 $
