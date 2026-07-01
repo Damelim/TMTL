@@ -47,6 +47,11 @@ W_true_source2 = W_true_target - 1*Delta_W
 ## TMTL(Fused)
 
 First, solve the jointly regularized least-squares problem
+$$
+E=mc^2
+$$
+
+
 $
 \hat{\mathbf{B}}^0,\cdots,\hat{\mathbf{B}}^L &\in \arg\min_{\mathbf{B}^0,\cdots,\mathbf{B}^L} \left[
 \frac{1}{2NK}\sum\limits_{\ell=0}^{L} \lVert \mathbf{Y}^{\ell} - \mathbf{X}^{\ell \cdot} \mathbf{B}^\ell \rVert_F^2 + \lambda_0
