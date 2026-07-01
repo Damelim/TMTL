@@ -48,7 +48,7 @@ W_true_source2 = W_true_target - 1*Delta_W
 
 First, solve the jointly regularized least-squares problem
 
-$
+\[
 \hat{\mathbf B}^{0},\ldots,\hat{\mathbf B}^{L} =
 \arg\min_{\mathbf B^{0},\ldots,\mathbf B^{L}}
 \left[
@@ -65,9 +65,9 @@ a_\ell
 \|\mathbf B^\ell-\mathbf B^0\|_{2,1}
 \right)
 \right].
-$
+\]
 
-Then compute the fused estimator
+Then compute the fused estimator:
 $
 \hat{\mathbf W}^{F}
 =
