@@ -46,13 +46,10 @@ W_true_source2 = W_true_target - 1*Delta_W
 
 ## TMTL(Fused)
 
-## TMTL(Fused)
-
 First, solve the jointly regularized least-squares problem
 
 $
-\hat{\mathbf B}^{0},\ldots,\hat{\mathbf B}^{L}
-=
+\hat{\mathbf B}^{0},\ldots,\hat{\mathbf B}^{L} =
 \arg\min_{\mathbf B^{0},\ldots,\mathbf B^{L}}
 \left[
 \frac{1}{2NK}
@@ -71,14 +68,14 @@ a_\ell
 $
 
 Then compute the fused estimator
-$$
+$
 \hat{\mathbf W}^{F}
 =
 \frac{n_S}{N}
 \sum_{\ell=1}^{L}\hat{\mathbf B}^{\ell}
 +
 \frac{n_T}{N}\hat{\mathbf B}^{0}.
-$$
+$
 
 The following is an example code to fit **TMTL(Fused)** with $\lambda_0 = \lambda_1 = \lambda_2 = 0.001$.
 
