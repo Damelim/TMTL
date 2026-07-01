@@ -54,9 +54,9 @@ $
 $
 
 Then compute the fused estimator:
-$$
+$
 \mathbf{W}^F = \frac{n_S}{N} \sum_{\ell=1}^{L} \hat{\mathbf{B}}^\ell + \frac{n_T}{N} \hat{\mathbf{B}}^0
-$$
+$
 The following is an example code to fit **TMTL(Fused)** with $\lambda_0 = \lambda_1 = \lambda_2 = 0.001$.
 
 First, set tuning parameters and generate data.
@@ -105,13 +105,13 @@ W_opt_fused = n_source/N*(admmm$Gamma1 + admmm$Gamma2) + n_target/N*admmm$Gamma0
 ## TMTL(Debiased)
 
 A debiasing step only involves target-data and corrects aligned shifts from target.
-$$
+$
 \hat{\mathbf{D}} \in \argminA_{\mathbf{D} \in \mathbb{R}^{p \times K}} \frac{1}{2n_T K} \lVert \mathbf{Y}^0 - \mathbf{X}^{0 \cdot} (\hat{\mathbf{W}}^{F} + \mathbf{D}) \rVert_F^2 + \tilde{\lambda} \lVert \mathbf{D} \rVert_{2,1}, 
-$$
+$
 and the final debiased estimator is
-$$
+$
 \hat{\mathbf{W}}^{D} := \hat{\mathbf{W}}^{F} + \hat{\mathbf{D}}. \label{debiasedestimator}
-$$
+$
 
 The following is the code to fit **TMTL(Debiased)** with $\tilde{\lambda} = 0.001$.
 
