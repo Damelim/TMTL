@@ -107,10 +107,10 @@ W_opt_fused = n_source/N*(admmm$Gamma1 + admmm$Gamma2) + n_target/N*admmm$Gamma0
 ## TMTL(Debiased)
 
 A debiasing step only involves target-data and corrects aligned shifts from target.
-\begin{align}
+$$
 \hat{\mathbf{D}} &\in \argminA_{\mathbf{D} \in \mathbb{R}^{p \times K}} \frac{1}{2n_T K} \lVert \mathbf{Y}^0 - \mathbf{X}^{0 \cdot} (\hat{\mathbf{W}}^{F} + \mathbf{D}) \rVert_F^2 + \tilde{\lambda} \lVert \mathbf{D} \rVert_{2,1}, \label{debiasedobjective} \\
 \hat{\mathbf{W}}^{D} &:= \hat{\mathbf{W}}^{F} + \hat{\mathbf{D}}. \label{debiasedestimator}
-\end{align}
+$$
 
 The following is the code to fit **TMTL(Debiased)** with $\tilde{\lambda} = 0.001$.
 
