@@ -108,9 +108,10 @@ A debiasing step only involves target-data and corrects aligned shifts from targ
 $
 \hat{\mathbf{D}} \in \argminA_{\mathbf{D} \in \mathbb{R}^{p \times K}} \frac{1}{2n_T K} \lVert \mathbf{Y}^0 - \mathbf{X}^{0 \cdot} (\hat{\mathbf{W}}^{F} + \mathbf{D}) \rVert_F^2 + \tilde{\lambda} \lVert \mathbf{D} \rVert_{2,1}, 
 $
+
 and the final debiased estimator is
 $
-\hat{\mathbf{W}}^{D} := \hat{\mathbf{W}}^{F} + \hat{\mathbf{D}}. \label{debiasedestimator}
+\hat{\mathbf{W}}^{D} := \hat{\mathbf{W}}^{F} + \hat{\mathbf{D}}.
 $
 
 The following is the code to fit **TMTL(Debiased)** with $\tilde{\lambda} = 0.001$.
