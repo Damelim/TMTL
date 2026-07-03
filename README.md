@@ -58,6 +58,10 @@ $\mathbf{W}^F = \frac{n_S}{N} \sum_{\ell=1}^{L} \hat{\mathbf{B}}^\ell + \frac{n_
 
 The following is an example code to fit **TMTL(Fused)** with $\lambda_0 = \lambda_1 = \lambda_2 = 0.001$.
 
+For small number of $L$, it is recommended to choose $\lambda_0,\cdots,\lambda_L$ by cross-validating from a high-dimensional grid.
+
+If $L$ is large, one can utilize $a_\ell = 8 \sqrt{n_\ell/N}$ that matches an estimation error upper bound is recommended.
+
 First, set tuning parameters and generate data.
 
 ```r
@@ -103,7 +107,11 @@ W_opt_fused = n_source/N*(admmm$Gamma1 + admmm$Gamma2) + n_target/N*admmm$Gamma0
 
 ## TMTL(Debiased)
 
-A debiasing step only involves target-data and corrects aligned shifts from target.
+A debiasing step only involves target-data and corrects **aligned shifts** from target.
+
+For **aligned shift**, the debiasing step reduces the bias, while retaining some knowledge from the source data, while for **balanced shift**, the initial fused step is already advantageous.
+
+For practitioner, it is recommnded to conduct both steps.
 
 $\hat{\mathbf{D}} \in \arg\min_{\mathbf{D} \in \mathbb{R}^{p \times K}} \frac{1}{2n_T K} \lVert \mathbf{Y}^0 - \mathbf{X}^{0 \cdot} (\hat{\mathbf{W}}^{F} + \mathbf{D}) \rVert_F^2 + \tilde{\lambda} \lVert \mathbf{D} \rVert_{2,1},$
 
