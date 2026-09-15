@@ -1,6 +1,6 @@
 # TMTL
 
-Transfer Multitask Learning for high-dimensional multi-output regression.
+Joint-Sparse Transfer Learning for High-Dimensional Multi-Output Regression.
 
 ## Table of Contents
 - Generate example data
