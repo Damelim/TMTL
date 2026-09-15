@@ -1,4 +1,3 @@
-library(CVXR)
 library(glmnet)
 library(Rcpp)
 library(RcppArmadillo)
