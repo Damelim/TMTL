@@ -1,7 +1,7 @@
 library(glmnet)
 library(Matrix)
 library(dplyr)
-source('~/research_multitask/functions_joint_cluster.R')
+source('~/research_multitask/functions_joint.R')
 load('../threesource.Rdata')
 
 

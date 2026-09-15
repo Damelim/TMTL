@@ -3,7 +3,7 @@ library(Matrix)
 source('simulationsetting.R')
 library(dplyr)
 tgtidx = 9
-source('functions_stl_cluster.R')
+source('functions_stl.R')
 source('simulationsetting.R')
 
 load('../clr_data_donor_nofiltered_2500hvg1.Rdata')

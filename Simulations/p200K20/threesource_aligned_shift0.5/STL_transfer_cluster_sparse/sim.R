@@ -3,7 +3,7 @@ library(Matrix)
 library(dplyr)
 
 #### setup: functions + setting data ####
-source('~/research_multitask/functions_stl_cluster.R')
+source('~/research_multitask/functions_stl.R')
 load('../threesource.Rdata')
 
 #### Model 3) He et al. 2024 (B^{fused}) ####
