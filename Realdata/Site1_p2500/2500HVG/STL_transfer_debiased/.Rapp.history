@@ -1,0 +1,5 @@
+load("/Users/sunwoolim/Library/CloudStorage/GoogleDrive-96limtotoro@gmail.com/My Drive/research_multitask/L2,1penalty_3replication_p20K20_weightcomparison_differentn/onesource_bigskew_bigportiontransfer/nsource20000_ntarget200/STL_transfer/summary.Rdata")
+load("/Users/sunwoolim/Library/CloudStorage/GoogleDrive-96limtotoro@gmail.com/My Drive/research_multitask/dataset/RNA_protein/clr_standardized_2500HVG_log1p_STL_transfer_five_replications/summary_logtransform_target13272.Rdata")
+W_opt_fused_list[[1]]
+prediction_mse_vec
+load("/Users/sunwoolim/Library/CloudStorage/GoogleDrive-96limtotoro@gmail.com/My Drive/research_multitask/dataset/GSE164378/subsetcelltypel1_domain_donor_P5/CD4 T/clr_filtered_500HVG_log1p/STL_transfer_debiased/summary_logtransform_target8.Rdata")

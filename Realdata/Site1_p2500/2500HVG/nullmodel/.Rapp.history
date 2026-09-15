@@ -1,0 +1,30 @@
+load("/Users/sunwoolim/Library/CloudStorage/GoogleDrive-96limtotoro@gmail.com/My Drive/research_multitask/dataset/RNA_protein/MTL_notransfer/summary.Rdata")
+prediction_mse
+load("/Users/sunwoolim/Library/CloudStorage/GoogleDrive-96limtotoro@gmail.com/My Drive/research_multitask/dataset/RNA_protein/MTL_notransfer/summary_logtransform.Rdata")
+dim(test_predictions)
+test_predictions
+dim(test_predictions)
+load("/Users/sunwoolim/Library/CloudStorage/GoogleDrive-96limtotoro@gmail.com/My Drive/research_multitask/dataset/RNA_protein/MTL_notransfer/summary_logtransform.Rdata")
+dim(test_predictions)
+load("/Users/sunwoolim/Library/CloudStorage/GoogleDrive-96limtotoro@gmail.com/My Drive/research_multitask/dataset/RNA_protein/MTL_transfer/summary_logtransform.Rdata")
+dim(test_predictions)
+Y_test_true
+Y_test_true[1:5,1:5]
+load("/Users/sunwoolim/Library/CloudStorage/GoogleDrive-96limtotoro@gmail.com/My Drive/research_multitask/dataset/RNA_protein/MTL_transfer_debiased/summary_logtransform.Rdata")
+Y_test_true[1:5,1:5]
+dim(test_predictions)
+rm(list=ls())load("/Users/sunwoolim/Library/CloudStorage/GoogleDrive-96limtotoro@gmail.com/My Drive/research_multitask/dataset/RNA_protein/MTL_transfer_debiased/summary_logtransform.Rdata")
+rm(list=ls());load("/Users/sunwoolim/Library/CloudStorage/GoogleDrive-96limtotoro@gmail.com/My Drive/research_multitask/dataset/RNA_protein/MTL_notransfer/summary_logtransform.Rdata")
+dim(test_predictions)
+Y_test_true[1:5,1:5]
+dim(Y_test_true)
+load("/Users/sunwoolim/Library/CloudStorage/GoogleDrive-96limtotoro@gmail.com/My Drive/research_multitask/dataset/RNA_protein/MTL_notransfer/summary_logtransform.Rdata")
+load("/Users/sunwoolim/Library/CloudStorage/GoogleDrive-96limtotoro@gmail.com/My Drive/research_multitask/dataset/RNA_protein/MTL_notransfer_five_replications/summary_logtransform_target10886.Rdata")
+load("/Users/sunwoolim/Library/CloudStorage/GoogleDrive-96limtotoro@gmail.com/My Drive/research_multitask/dataset/RNA_protein/clr_standardized_nofiltered_1000HVG_log1p_MTL_notransfer_five_replications/summary_logtransform_target10886.Rdata")
+load("/Users/sunwoolim/Library/CloudStorage/GoogleDrive-96limtotoro@gmail.com/My Drive/research_multitask/dataset/RNA_protein/clr_standardized_nofiltered_1000HVG_log1p_MTL_transfer_five_replications/summary_logtransform_target10886.Rdata")
+load("/Users/sunwoolim/Library/CloudStorage/GoogleDrive-96limtotoro@gmail.com/My Drive/research_multitask/dataset/RNA_protein/clr_standardized_nofiltered_1000HVG_log1p_MTL_notransfer_five_replications/summary_logtransform_target10886.Rdata")
+load("/Users/sunwoolim/Library/CloudStorage/GoogleDrive-96limtotoro@gmail.com/My Drive/research_multitask/dataset/GSE164378/domain_celltype1/clr_nofiltered_1000HVG_log1p/clr_nofiltered_1000HVG_log1p_MTL_notransfer_five_replications/summary_logtransform_target1.Rdata")
+length(prediction_mse_vec)
+load("/Users/sunwoolim/Library/CloudStorage/GoogleDrive-96limtotoro@gmail.com/My Drive/research_multitask/dataset/GSE164378/subsetcelltypel1_domain_donor_P5/subsetBcells_domain_donor_P5/clr_nofiltered_1000HVG_log1p/clr_nofiltered_1000HVG_log1p_MTL_notransfer_five_replications/summary_logtransform_target1.Rdata")
+lambda0_vec
+prediction_mse_vec
