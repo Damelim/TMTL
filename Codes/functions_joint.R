@@ -2,6 +2,10 @@ library(Rcpp)
 library(RcppArmadillo)
 sourceCpp('~/Library/CloudStorage/GoogleDrive-96limtotoro@gmail.com/My Drive/research_multitask/multitask_supplement.cpp')
 
+l2norm = function(x){
+  sqrt(sum(x^2))
+}
+
 split_data <- function(X, Y, train_prop = 0.6, val_prop = 0.2, test_prop = 0.2) {
   #set.seed(seed)
   n <- nrow(X)
@@ -288,11 +292,16 @@ admm_two_source <- function(X0, Y0, X1, Y1, X2, Y2,
                             lambda0, lambda1, lambda2,
                             rho00 = 1, rho01 = 1, rho02 = 1, rho1 = 1, rho2 = 1, 
                             mu = 10, tau_incr = 2, tau_decr = 1.5, rho_max = 10000,
-                            max_iter = 1000, tol_prim = 1e-5, tol_dual = 1e-5, verbose = F){
+                            max_iter = 1000, tol_prim = 1e-5, tol_dual = 1e-5, verbose = F, compute_objvalue = F){
   
   start <- Sys.time()
   
   N = nrow(X0) + nrow(X1) + nrow(X2)
+  
+  if(compute_objvalue == T){
+    objvalue = rep(NA, max_iter)
+  }
+  
   
   rho00value = rep(NA, max_iter)
   rho01value = rep(NA, max_iter)
@@ -398,6 +407,12 @@ admm_two_source <- function(X0, Y0, X1, Y1, X2, Y2,
                   iter, log(r_primal00,base=10), log(s_dual00,base=10), log(r_primal01,base=10), log(s_dual01,base=10), log(r_primal02,base=10), log(s_dual02,base=10), log(r_primal1,base=10), log(s_dual1,base=10), log(r_primal2,base=10), log(s_dual2,base=10)))
     }
     
+    if(compute_objvalue == T){
+      objvalue[iter] = 1/(2*N) * (Frob_norm_sq(Y_target - X_target %*% B0) + Frob_norm_sq(Y_source1 - X_source1 %*% B1) + Frob_norm_sq(Y_source2 - X_source2 %*% B2)) +
+        lambda0 * twoone_norm(B0) + lambda1 * twoone_norm(B0 - B1) + lambda2 * twoone_norm(B0 - B2)
+    }
+    
+    
     r_primal00value[iter] = r_primal00 ; s_dual00value[iter] = s_dual00
     r_primal01value[iter] = r_primal01 ; s_dual01value[iter] = s_dual01
     r_primal02value[iter] = r_primal02 ; s_dual02value[iter] = s_dual02
@@ -459,6 +474,19 @@ admm_two_source <- function(X0, Y0, X1, Y1, X2, Y2,
   
   end <- Sys.time()
   
+  if(compute_objvalue == T){
+    return(list(B0 = B0, B1 = B1, B2 = B2,
+                Gamma00 = Gamma00, Gamma01 = Gamma01, Gamma02 = Gamma02, Gamma1 = Gamma1, Gamma2 = Gamma2,
+                U0 = U0, U1 = U1, U2 = U2, V1 = V1, V2 = V2,
+                iter = iter, runtime = as.numeric(difftime(end, start, units = "secs")),
+                rho00 = rho00value, rho01 = rho01value, rho02 = rho02value, rho1 = rho1value, rho2 = rho2value,
+                objvalue = objvalue,
+                r_primal00 = r_primal00value, s_dual00 = s_dual00value, 
+                r_primal01 = r_primal01value, s_dual01 = s_dual01value,
+                r_primal02 = r_primal02value, s_dual02 = s_dual02value,
+                r_primal1 = r_primal1value, s_dual1 = s_dual1value,
+                r_primal2 = r_primal2value, s_dual2 = s_dual2value))
+  }else{
   return(list(B0 = B0, B1 = B1, B2 = B2,
               Gamma00 = Gamma00, Gamma01 = Gamma01, Gamma02 = Gamma02, Gamma1 = Gamma1, Gamma2 = Gamma2,
               U0 = U0, U1 = U1, U2 = U2, V1 = V1, V2 = V2,
@@ -469,6 +497,7 @@ admm_two_source <- function(X0, Y0, X1, Y1, X2, Y2,
               r_primal02 = r_primal02value, s_dual02 = s_dual02value,
               r_primal1 = r_primal1value, s_dual1 = s_dual1value,
               r_primal2 = r_primal2value, s_dual2 = s_dual2value))
+  }
 }
 
 admm_three_source <- function(X0, Y0, X1, Y1, X2, Y2, X3, Y3,

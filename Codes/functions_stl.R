@@ -4,6 +4,29 @@ library(Rcpp)
 library(RcppArmadillo)
 sourceCpp('~/Library/CloudStorage/GoogleDrive-96limtotoro@gmail.com/My Drive/research_multitask/MatMult_mac.cpp')
 
+split_data <- function(X, Y, train_prop = 0.6, val_prop = 0.2, test_prop = 0.2) {
+  #set.seed(seed)
+  n <- nrow(X)
+  idx_all <- sample(n)   # Shuffle indices
+  
+  n_train <- floor(train_prop * n)
+  n_val <- floor(val_prop * n)
+  n_test <- n - n_train - n_val
+  
+  idx_train <- idx_all[1:n_train]
+  idx_val <- idx_all[(n_train + 1):(n_train + n_val)]
+  idx_test <- idx_all[(n_train + n_val + 1):n]
+  
+  return(list(
+    X_train = X[idx_train, , drop = FALSE],
+    Y_train = Y[idx_train, , drop = FALSE],
+    X_val   = X[idx_val, , drop = FALSE],
+    Y_val   = Y[idx_val, , drop = FALSE],
+    X_test  = X[idx_test, , drop = FALSE],
+    Y_test  = Y[idx_test, , drop = FALSE]
+  ))
+}
+
 rmse = function(x,y){
   sqrt(mean((x-y)^2))
 }
