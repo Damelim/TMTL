@@ -166,12 +166,12 @@ Rerunning a target script overwrites its corresponding result file.
 The real-data summary script reports **relative MSE**, despite the
 `rmse` prefix in its filename:
 
-$$
+$
 Q_{m,r}^{(\ell)}
 =
 \frac{\mathrm{MSE}_{m,r}^{(\ell)}}
      {\mathrm{MSE}_{\mathrm{null},r}^{(\ell)}}.
-$$
+$
 
 For each method and target domain, the script reports the mean and sample
 standard deviation of this ratio across 20 random-split replications.
