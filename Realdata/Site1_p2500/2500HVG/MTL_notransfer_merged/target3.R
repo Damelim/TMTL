@@ -9,7 +9,7 @@ tgtidx = 3
 #### load each domain separately (kept per domain for domain-wise centering) ####
 Xlist = vector('list', 12) ; Ylist = vector('list', 12)
 for(i in 1:12){
-  load(paste('../clr_data_donor_nofiltered_500hvg',i,'.Rdata',sep=""))
+  load(paste('../clr_data_donor_nofiltered_2500hvg',i,'.Rdata',sep=""))
   Xlist[[i]] = as.matrix(X) ; Ylist[[i]] = as.matrix(Y)
 }
 rm(X,Y,i)

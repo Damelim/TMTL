@@ -6,7 +6,7 @@ source('simulationsetting.R')
 
 tgtidx = 6
 
-load(paste('../clr_data_donor_nofiltered_500hvg',tgtidx,'.Rdata',sep=""))
+load(paste('../clr_data_donor_nofiltered_2500hvg',tgtidx,'.Rdata',sep=""))
 X0 = X ; Y0 = Y ; Y0 = as.matrix(Y0) 
 rm(X, Y) 
 

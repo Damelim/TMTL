@@ -49,7 +49,7 @@ read_summary = function(folder, domain) {
 
 data_env = new.env(parent = emptyenv())
 load(
-  "clr_data_donor_nofiltered_500hvg1.Rdata",
+  "clr_data_donor_nofiltered_2500hvg1.Rdata",
   envir = data_env
 )
 
@@ -414,7 +414,7 @@ read_summary = function(folder, domain) {
 
 data_env = new.env(parent = emptyenv())
 load(
-  "clr_data_donor_nofiltered_500hvg1.Rdata",
+  "clr_data_donor_nofiltered_2500hvg1.Rdata",
   envir = data_env
 )
 
