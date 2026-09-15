@@ -21,8 +21,7 @@ install.packages(c(
 
 The C++ helpers require a working C++ compiler compatible with R.
 The optional preprocessing script additionally requires `zellkonverter`,
-`SingleCellExperiment`, and `Seurat`. The legacy `functions_stl.R`
-script additionally requires `CVXR`.
+`SingleCellExperiment`, and `Seurat`. 
 
 Before running the scripts, adjust `source()`, `sourceCpp()`, and data paths
 to match the location of the downloaded repository. Shared functions and
