@@ -1,133 +1,178 @@
 # TMTL
 
-Joint-Sparse Transfer Learning for High-Dimensional Multi-Output Regression.
+Code for **Joint-Sparse Transfer Learning for High-Dimensional Multi-Output Regression**.
 
-## Table of Contents
-- Generate example data
-- Fit TMTL(Fused)
-- Fit TMTL(Debiased)
+## Repository structure
 
-## Sample data generation (with 2 source domains; $L=2$)
+- `Codes/`: estimation functions and C++ helpers.
+- `Simulations/`: simulation experiments with $p = 200$ and $K$ = 10, 20, and 30.
+- `Realdata/Site1_p2500/2500HVG/`: Site 1 real-data analysis starting from 2,500 highly variable genes before additional filtering. For the final $p$ and $K$, refer to the main text.
 
-Example data generated in the same way as "Balanced shift" in the manuscript.
+## Requirements
 
-```r
-set.seed(1)
-L=2
-p = 100 ; K = 50 ; n_source = 500 ; n_target = 100 ; N = L*n_source + n_target
-lambda_values = 10^seq(-4, -1, length = 5)
-cv_folds = 3
-
-active_features_target = 1:10 ; active_features_source = 1:15
-sigma = 0.25 ; sddiff = 0.1 ; sd_target = 1
-
-proportion_identical_tasks = 0
-Wmean = 0.2
-
-W_true_target = matrix(0, p, K) ; Delta_W = matrix(0, p, K)
-for(i in 1:length(active_features_target)){
-  W_true_target[i,] = rnorm(K, mean = Wmean, sd = Wmean) # /sqrt(i), sd = Wmean/sqrt(i))
-  print(norm(W_true_target[i,],"2"))
-}
-alpha = 2
-
-for(i in 1:length(active_features_source)){
-  Delta_W[i,] = rnorm(K, mean = Wmean/(alpha*sqrt(i)), sd = Wmean/(alpha*sqrt(i))) 
-  print(norm(Delta_W[i,],"2"))
-}
-if(proportion_identical_tasks > 0){
-  Delta_W[,(K*(1-proportion_identical_tasks)+1):K] = 0
-}
-
-W_true_source1 = W_true_target + 1*Delta_W
-W_true_source2 = W_true_target - 1*Delta_W
-```
-
-
-## TMTL(Fused)
-
-First, solve the jointly regularized least-squares problem
-
-$\hat{\mathbf{B}}^0,\cdots,\hat{\mathbf{B}}^L \in \arg\min_{\mathbf{B}^0,\cdots,\mathbf{B}^L} \left[
-\frac{1}{2NK}\sum\limits_{\ell=0}^{L} \lVert \mathbf{Y}^{\ell} - \mathbf{X}^{\ell \cdot} \mathbf{B}^\ell \rVert_F^2 + \lambda_0
-\left( \lVert \mathbf{B}^{0} \rVert_{2,1} + \sum\limits_{\ell=1}^{L} a_\ell \lVert \mathbf{B}^\ell - \mathbf{B}^0 \rVert_{2,1} \right) \right]$
-
-Then compute the fused estimator:
-
-$\mathbf{W}^F = \frac{n_S}{N} \sum_{\ell=1}^{L} \hat{\mathbf{B}}^\ell + \frac{n_T}{N} \hat{\mathbf{B}}^0$.
-
-The following is an example code to fit **TMTL(Fused)** with $\lambda_0 = \lambda_1 = \lambda_2 = 0.001$.
-
-For small number of $L$, it is recommended to choose $\lambda_0,\cdots,\lambda_L$ by cross-validating from a high-dimensional grid.
-
-If $L$ is large, one can utilize $a_\ell = 8 \sqrt{n_\ell/N}$ that matches an estimation error upper bound is recommended.
-
-First, set tuning parameters and generate data.
+The estimation code uses the following R packages:
 
 ```r
-lambda0 = 0.001
-lambda1 = 0.001
-lambda2 = 0.001
-
-set.seed(1) # seed to generate errors
-
-
-## generate target and source data
-X_target = matrix(rnorm(n_target * p, mean = 0, sd = sd_target), n_target, p) 
-Y_target = X_target %*% W_true_target + matrix(rnorm(n_target * K, mean = 0, sd = sigma), n_target, K) 
-
-X_source1 = matrix(rnorm(n_source * p, mean = 0, sd = sample(c(sd_target + sddiff, sd_target - sddiff), size = n_source * p, replace = T, prob = c(0.5, 0.5))), n_source, p) 
-Y_source1 = X_source1 %*% W_true_source1 + matrix(rnorm(n_source * K, sd = sigma), n_source, K) 
-X_source2 = matrix(rnorm(n_source * p, mean = 0, sd = sample(c(sd_target + sddiff, sd_target - sddiff), size = n_source * p, replace = T, prob = c(0.5, 0.5))), n_source, p) 
-Y_source2 = X_source2 %*% W_true_source2 + matrix(rnorm(n_source * K, sd = sigma), n_source, K) 
+install.packages(c(
+  "glmnet", "Matrix", "dplyr",
+  "Rcpp", "RcppArmadillo", "RcppEigen"
+))
 ```
 
-Precomputing gram matrices and saving those help reduce computational cost.
+The C++ helpers require a working C++ compiler compatible with R.
+The optional preprocessing script additionally requires `zellkonverter`,
+`SingleCellExperiment`, and `Seurat`. The legacy `functions_stl.R`
+script additionally requires `CVXR`.
 
-```r
-X0tX0 = crossprod(X_target,X_target) ; X0tY0 = crossprod(X_target,Y_target)
-X1tX1 = crossprod(X_source1,X_source1) ; X1tY1 = crossprod(X_source1,Y_source1)
-X2tX2 = crossprod(X_source2,X_source2) ; X2tY2 = crossprod(X_source2,Y_source2)
-```
+Before running the scripts, adjust `source()`, `sourceCpp()`, and data paths
+to match the location of the downloaded repository. Shared functions and
+C++ helpers are provided in `Codes/`. Relative paths are resolved from
+the current R working directory, which can be checked with `getwd()`.
 
-Now run the algorithm with alternating direction method of multipliers (ADMM), with adaptive update rule. 
-Maximum iteration = 1000 with tolerance level for dual parameters and primal parameters were set as 1e-5.
-$\mathbf{W}^F = \frac{n_S}{N} \sum_{\ell=1}^{L} \hat{\mathbf{B}}^\ell + \frac{n_T}{N} \hat{\mathbf{B}}^0$.
+## Methods
 
-```r
-admmm = admm_two_source(X0 = X_target, Y0 = Y_target, X1 = X_source1, Y1 = Y_source1, X2 = X_source2, Y2 = Y_source2, X0tX0, X0tY0, X1tX1, X1tY1, X2tX2, X2tY2,
-                        lambda0 = lambda0, lambda1 = lambda1, lambda2 = lambda2,
-                        rho00 = 1, rho01 = 1, rho02 = 1, rho1 = 1, rho2 = 1,
-                         mu = 10, tau_incr = 2, tau_decr = 1.5, rho_max = 10000,
-                         max_iter = 1000, tol_prim = 1e-5, tol_dual = 1e-5, verbose = F)
+The directory names correspond to the following methods in the manuscript:
 
-W_opt_fused = n_source/N*(admmm$Gamma1 + admmm$Gamma2) + n_target/N*admmm$Gamma00
-```
+| Method in the manuscript | Simulation directory | Real-data directory |
+|---|---|---|
+| **TMTL(Fused)** | `MTL_transfer` | `MTL_transfer_cluster` |
+| **TMTL(Debiased)** | `MTL_transfer_debiased` | `MTL_transfer_debiased` |
+| **MTL(Target)** | `MTL_notransfer` | `MTL_notransfer` |
+| **MTL(Full)** | `MTL_notransfer_merged` | `MTL_notransfer_merged` |
+| **TSTL(Fused)** | `STL_transfer_cluster_sparse` | `STL_transfer_cluster` |
+| **TSTL(Debiased)** | `STL_transfer_debiased` | `STL_transfer_debiased` |
+
+- **TMTL(Fused):** joint-sparse multitask transfer estimator before target-based debiasing.
+- **TMTL(Debiased):** joint-sparse multitask transfer estimator with target-based debiasing.
+- **MTL(Target):** multitask estimator fitted using target data only.
+- **MTL(Full):** multitask estimator fitted by pooling the target and source data under a common coefficient matrix.
+- **TSTL(Fused):** taskwise single-response transfer estimator before debiasing.
+- **TSTL(Debiased):** taskwise single-response transfer estimator with target-based debiasing.
+
+The real-data directory also contains `nullmodel/`, which fits the
+intercept-only reference model using target-training means for each protein.
+
+## Simulation experiments
+
+The simulation directories are:
+
+- `Simulations/p200K10/`
+- `Simulations/p200K20/`
+- `Simulations/p200K30/`
+
+Each contains four source-shift settings:
+
+| Setting directory | Scenario |
+|---|---|
+| `threesource_noskew` | Balanced shifts |
+| `threesource_aligned_shift0.25` | Aligned shifts with alpha = 0.25 |
+| `threesource_aligned_shift0.5` | Aligned shifts with alpha = 0.5 |
+| `threesource_aligned_shift1` | Aligned shifts with alpha = 1 |
+
+Each setting uses **100 replications**.
+
+### Execution order
+
+1. Choose a `p200K` directory and a setting.
+2. Load the included `threesource.Rdata`, which contains the simulation
+   settings and coefficient matrices. Alternatively, regenerate it by
+   running `datacreation.R` from the setting directory, then load the
+   generated file.
+3. Load the required functions from `Codes/`.
+4. Set the working directory to the relevant method directory and run `sim.R`.
+5. Repeat for all six methods and all four settings.
+
+Run `MTL_transfer` before `MTL_transfer_debiased`, and
+`STL_transfer_cluster_sparse` before `STL_transfer_debiased`.
+The debiased methods load the corresponding fused estimates.
+
+When starting a fresh R session, load the settings and required functions
+again before running a method.
+
+Each method generates observations using `set.seed(j)` for replication
+`j` and saves its results to `summary.Rdata`. These generated result files
+are omitted from the repository. Rerunning a method overwrites its result file.
+
+### Summaries and figures
+
+After completing all methods and settings, run
+`mseplotting_threesource_frobnorm_negtransfer_predictionerror.R`
+from the selected `p200K` directory.
+
+This script summarizes coefficient error and prediction RMSE, computes
+negative-transfer frequencies relative to **MTL(Target)**, and generates:
+
+- `logfrobnorm_threesource.pdf`
+- `predrmse_threesource.pdf`
 
 
-## TMTL(Debiased)
-
-A debiasing step only involves target-data and corrects **aligned shifts** from target.
-
-For **aligned shift**, the debiasing step reduces the bias, while retaining some knowledge from the source data, while for **balanced shift**, the initial fused step is already advantageous.
-
-For practitioner, it is recommnded to conduct both steps.
-
-$\hat{\mathbf{D}} \in \arg\min_{\mathbf{D} \in \mathbb{R}^{p \times K}} \frac{1}{2n_T K} \lVert \mathbf{Y}^0 - \mathbf{X}^{0 \cdot} (\hat{\mathbf{W}}^{F} + \mathbf{D}) \rVert_F^2 + \tilde{\lambda} \lVert \mathbf{D} \rVert_{2,1},$
-
-and the final debiased estimator is
-
-$\hat{\mathbf{W}}^{D} := \hat{\mathbf{W}}^{F} + \hat{\mathbf{D}}.$
-
-The following is the code to fit **TMTL(Debiased)** with $\tilde{\lambda} = 0.001$, with maximum iteration = 1000 with tolerance level for dual/primal parameters were also set as 1e-5.
-
-```r
-lam_debias = 0.001
-MTL_admm(X = X_target, Y = Y_target - X_target %*% W_opt_fused, lambda = lam_debias, rho = 1, max_iter = 1000, tol = 1e-5)
-W_opt_bias = admmm_mtl$sol
-W_opt_debiased = W_opt_fused + W_opt_bias
-```
 
 
 
 
+## Real-data analysis
+
+Considering the repository size, we provide **Site 1 as a representative example**
+of the four-site analysis. The same analysis workflow applies to the
+other sites, using their corresponding preprocessed data, domain indices,
+and source-domain configurations.
+
+The uploaded example is located in:
+
+`Realdata/Site1_p2500/2500HVG/`
+
+It contains 12 target cell types and uses **20 random-split replications**. 
+Number of source domains $L$, $p$ (dimensionality), and $K$ (the number of tasks) may differ by Sites, and the details are in the main text.
+
+### Files
+
+| File | Purpose |
+|---|---|
+| `domain_index.csv` | Mapping between domain indices and cell types |
+| `clr_data_donor_nofiltered_2500hvg*.Rdata` | Preprocessed domain-specific input data |
+| `simulationsetting.R` | Tuning parameters, split proportions, and replication count |
+| `dataprocess_site1.R` | Preprocessing code for Site 1 |
+| `target1.R` through `target12.R` | Analysis scripts for the respective target domains |
+| `rmse_domainwise_comparedtonull.r` | Domain-wise relative-MSE summaries |
+
+The preprocessed inputs are included. To rerun preprocessing, obtain the
+[GSE194122 dataset](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE194122)
+and update the `h5ad_file` path in `dataprocess_site1.R` to point to the
+BMMC H5AD file.
+
+### Execution order
+
+1. Load the required functions from `Codes/` and the settings in
+   `simulationsetting.R`.
+2. Set the working directory to a method directory and run the appropriate
+   `target*.R` script.
+3. Repeat for all 12 targets and all six methods.
+4. Run the corresponding target scripts in `nullmodel/`.
+5. Run `rmse_domainwise_comparedtonull.r` from the `2500HVG` directory.
+
+For each target, run `MTL_transfer_cluster` before
+`MTL_transfer_debiased`, and `STL_transfer_cluster` before
+`STL_transfer_debiased`.
+
+When starting a fresh R session, load the required functions and settings
+again, including for the null-model scripts.
+
+Each target script saves its results as
+`summary_logtransform_target*.Rdata` in the method directory.
+Rerunning a target script overwrites its corresponding result file.
+
+### Evaluation metric
+
+The real-data summary script reports **relative MSE**, despite the
+`rmse` prefix in its filename:
+
+$$
+Q_{m,r}^{(\ell)}
+=
+\frac{\mathrm{MSE}_{m,r}^{(\ell)}}
+     {\mathrm{MSE}_{\mathrm{null},r}^{(\ell)}}.
+$$
+
+For each method and target domain, the script reports the mean and sample
+standard deviation of this ratio across 20 random-split replications.
+Smaller values indicate better predictive performance.
