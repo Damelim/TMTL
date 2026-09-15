@@ -8,6 +8,15 @@ Code for **Joint-Sparse Transfer Learning for High-Dimensional Multi-Output Regr
 - `Simulations/`: simulation experiments with $p = 200$ and $K$ = 10, 20, and 30.
 - `Realdata/Site1_p2500/2500HVG/`: Site 1 real-data analysis starting from 2,500 highly variable genes before additional filtering. For the final $p$ and $K$, refer to the main text.
 
+## Estimation functions
+
+- `Codes/functions_joint.R`: joint-sparse multitask estimation functions used for **TMTL(Fused)** and **MTL(Target)**. The multitask estimator is also used for **MTL(Full)** with pooled target and source data.
+- `Codes/functions_stl.R`: taskwise single-response transfer estimation functions used for **TSTL(Fused)**.
+
+The corresponding method-specific scripts implement the target-based
+debiasing steps for **TMTL(Debiased)** and **TSTL(Debiased)**.
+
+
 ## Requirements
 
 The estimation code uses the following R packages:
