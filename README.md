@@ -62,7 +62,13 @@ The directory names correspond to the following methods in the manuscript:
 The real-data directory also contains `nullmodel/`, which fits the
 intercept-only reference model using target-training means for each protein.
 
-## Simulation experiments
+
+
+
+
+
+
+## Simulation experiments (in the main text)
 
 The simulation directories are:
 
@@ -180,6 +186,130 @@ The real-data summary script reports **relative MSE**, despite the
 Q_{m,r}^{(\ell)} = \frac{\mathrm{MSE}_{m,r}^{(\ell)}}{\mathrm{MSE}_{\mathrm{null},r}^{(\ell)}}.
 ```
 
-For each method and target domain, the script reports the mean and sample
-standard deviation of this ratio across 20 random-split replications.
-Smaller values indicate better predictive performance.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+## Simulation experiments in the Appendix
+
+`Simulation_appendix/` contains additional experiments with one, two,
+and three source domains, where the difference compared to the main-text simulation is that we are optimizing penalty parameters $\lambda_0,\cdots,\lambda_L$ fully in a product grid in **TMTL(Fused)** and **TSTL(Fused)**. 
+We use **p = 100**, **K = 50**, and **20 replications**, with 100 target observations and 500 observations per source domain.
+
+### Settings and input files
+
+| Setting directory | Scenario | Input file |
+|---|---|---|
+| `alpha0/` | One source, no coefficient shift | `onesource.Rdata` |
+| `alpha1:5/` | One source, shift level 1/5 | `onesource.Rdata` |
+| `alpha1:2/` | One source, shift level 1/2 | `onesource.Rdata` |
+| `alpha1/` | One source, shift level 1 | `onesource.Rdata` |
+| `twosource_balanced/` | Two sources, balanced shifts | `twosource.Rdata` |
+| `twosource_aligned/` | Two sources, aligned shifts | `twosource.Rdata` |
+| `threesource_balanced/` | Three sources, balanced shifts | `threesource.Rdata` |
+| `threesource_aligned/` | Three sources, aligned shifts | `threesource.Rdata` |
+
+Each input file contains the simulation settings and coefficient matrices.
+The method scripts generate observations separately for each replication
+using `set.seed(j)`.
+
+### Methods
+
+Each setting contains the following method directories:
+
+| Directory | Method in the manuscript |
+|---|---|
+| `MTL_transfer/` | TMTL(Fused) |
+| `MTL_transfer_debiased/` | TMTL(Debiased) |
+| `MTL_notransfer/` | MTL(Target) |
+| `MTL_notransfer_merged/` | MTL(Full) |
+| `STL_transfer/` | TSTL(Fused) |
+| `STL_transfer_debiased/` | TSTL(Debiased) |
+
+### Execution order
+
+1. Choose a setting directory and load its input `.Rdata` file.
+   Alternatively, run `datacreation.R` from that directory and then
+   load the generated file. The data-creation script clears the R
+   workspace after saving.
+2. Load `Codes/functions_joint.R` and `Codes/functions_stl.R`.
+   Adjust their `sourceCpp()` paths to the C++ helpers in `Codes/`
+   for your local repository location.
+3. Set the working directory to the chosen method directory and
+   run `source("sim.R")`.
+4. Repeat for all six methods and all eight settings. Reload the
+   appropriate input file when changing settings.
+
+Run `MTL_transfer/sim.R` before `MTL_transfer_debiased/sim.R`:
+the debiased script loads `../MTL_transfer/summary.Rdata`, which is the result from running **TMTL(Fused)**.
+
+When starting a fresh R session, reload the input file and shared
+functions before running a method.
+
+Each method writes `summary.Rdata` in its own directory.
+These generated result files are omitted from the repository;
+rerunning a method overwrites its result file.
+
+### Coefficient error, prediction error, and negative transfer
+
+After completing the methods for the relevant settings, set the
+working directory to `Simulation_appendix/` and run:
+
+```r
+source("mseplotting_onesource_frobnorm_negtransfer_predictionerror.R",
+       echo = TRUE)
+
+source("mseplotting_twosource_frobnorm_negtransfer_predictionerror.R",
+       echo = TRUE)
+
+source("mseplotting_threesource_frobnorm_negtransfer_predictionerror.R",
+       echo = TRUE)
+```
+
+Each script loads the corresponding method-level `summary.Rdata` files,
+reports means and sample standard deviations of coefficient error and
+prediction RMSE, and computes negative-transfer frequencies.
+
+Coefficient error is summarized on the log scale, equal to the log squared Frobenius
+error divided by K. Prediction RMSE compares estimated and true
+target regression means on independent test covariates.
+
+Negative-transfer frequency is the proportion of replications in
+which a method has larger **estimation** error than **MTL(Target)** in the same
+replication. The scripts report this separately for coefficient
+error (`ntmat_est`) and prediction RMSE (`ntmat_pred`).
+
+The scripts generate the following figures in `Simulation_appendix/`:
+
+| Number of Sources | Coefficient error | Prediction RMSE |
+|---|---|---|
+| One source | `logfrobnorm_onesource.pdf` | `predrmse_onesource.pdf` |
+| Two sources | `logfrobnorm_twosource.pdf` | `predrmse_twosource.pdf` |
+| Three sources | `logfrobnorm_threesource.pdf` | `predrmse_threesource.pdf` |
+
+### ADMM iteration counts
+
+After running **TMTL(Fused)** for all eight settings, run the following
+from `Simulation_appendix/`:
+
+```r
+source("iteration_table.R")
+print(round(tab, 3))
+```
+
+`iteration_table.R` reads `iter_vec` from each setting's
+`MTL_transfer/summary.Rdata` and constructs a table containing the
+mean and sample standard deviation of the final-fit ADMM iteration
+counts across 20 replications (with chosen set of penalty parameters from cross-validation). 
+Columns correspond to the 8 settings, and rows contain the mean and standard deviation.
+
