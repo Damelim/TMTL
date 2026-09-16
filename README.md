@@ -6,7 +6,9 @@ Code for **Joint-Sparse Transfer Learning for High-Dimensional Multi-Output Regr
 
 - `Codes/`: estimation functions and C++ helpers.
 - `Simulations/`: simulation experiments with $p = 200$ and $K$ = 10, 20, and 30.
+- `Simulations_appendix/`: simulation experiments in the appendix with $p = 100$ and $K$ = 50.
 - `Realdata/Site1_p2500/2500HVG/`: Site 1 real-data analysis starting from 2,500 highly variable genes before additional filtering. For the final $p$ and $K$, refer to the main text.
+
 
 ## Estimation functions
 
